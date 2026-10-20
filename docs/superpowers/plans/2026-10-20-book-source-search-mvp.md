@@ -25,7 +25,7 @@
 
 ## File Map
 
-- `BookReaderIOS.xcodeproj/project.pbxproj` — iOS app and XCTest target configuration.
+- `project.yml` — XcodeGen configuration for the iOS app and XCTest targets; the generated Xcode project is ignored.
 - `App/BookReaderIOSApp.swift`, `App/RootView.swift` — app entry point and navigation shell.
 - `Core/BookSource/BookSource.swift` — Codable and persisted source model.
 - `Core/BookSource/BookSourceImport.swift` — Legado single/array JSON decoding and validation.
@@ -44,7 +44,7 @@
 
 **Interfaces:** `BookReaderIOSApp` launches `RootView`. `RootView` exposes two top-level destinations: `SearchView` and `SourceListView`; both initially render empty states.
 
-- [ ] Create an iOS 17+ SwiftUI app target named `BookReaderIOS` and unit/UI test targets. Keep app code under `App/`, `Core/`, and `Features/`.
+- [ ] Create an iOS 17+ SwiftUI app target named `BookReaderIOS` and unit/UI test targets using XcodeGen. Keep app code under `App/`, `Core/`, and `Features/`.
 - [ ] Add `RootView` with navigation links to Search and Sources and accessible labels for UI tests.
 - [ ] Run `xcodebuild -project BookReaderIOS.xcodeproj -scheme BookReaderIOS -destination 'platform=iOS Simulator,name=iPhone 16' test` on macOS; expected result is both test targets build and an empty-state smoke test passes.
 - [ ] Commit the shell as `chore: create iOS app shell`.

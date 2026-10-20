@@ -1,0 +1,41 @@
+name: BookReaderIOS
+options:
+  bundleIdPrefix: com.xjin0591
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  BookReaderIOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Core
+      - path: Features
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xjin0591.bookreaderios
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+  BookReaderIOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/Unit
+    dependencies:
+      - target: BookReaderIOS
+  BookReaderIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/UI
+    dependencies:
+      - target: BookReaderIOS
+schemes:
+  BookReaderIOS:
+    build:
+      targets:
+        BookReaderIOS: all
+    test:
+      targets:
+        - BookReaderIOSTests
+        - BookReaderIOSUITests
