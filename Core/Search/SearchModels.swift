@@ -18,6 +18,15 @@ public struct SearchBook: Identifiable, Equatable, Sendable {
             ? Dictionary(uniqueKeysWithValues: sourceIDs.compactMap { sourceID in detailURL.map { (sourceID, $0) } })
             : detailURLsBySource
     }
+
+    public func resolvedDetailURL(forSourceID sourceID: String) -> URL? {
+        guard let value = detailURLsBySource[sourceID] ?? detailURL,
+              let url = URL(string: value),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              url.host != nil else { return nil }
+        return url
+    }
 }
 
 public struct SourceSearchOutcome: Identifiable, Equatable, Sendable {

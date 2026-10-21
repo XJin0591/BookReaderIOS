@@ -46,11 +46,11 @@ final class SourceSearchServiceTests: XCTestCase {
                 "second": "javascript:alert(1)"
             ]
         )
-        XCTAssertEqual(book.detailURL(forSourceID: "first")?.absoluteString, "https://first.example.invalid/book")
-        XCTAssertNil(book.detailURL(forSourceID: "second"))
+        XCTAssertEqual(book.resolvedDetailURL(forSourceID: "first")?.absoluteString, "https://first.example.invalid/book")
+        XCTAssertNil(book.resolvedDetailURL(forSourceID: "second"))
 
         let missing = SearchBook(id: "missing", title: "缺链接", author: nil, detailURL: nil, sourceIDs: ["third"])
-        XCTAssertNil(missing.detailURL(forSourceID: "third"))
+        XCTAssertNil(missing.resolvedDetailURL(forSourceID: "third"))
     }
 }
 

@@ -24,11 +24,7 @@ struct SearchView: View {
                 List {
                     Section("搜索结果") {
                         ForEach(model.searchCoordinator.books) { book in
-                            VStack(alignment: .leading) {
-                                Text(book.title)
-                                if let author = book.author { Text(author).font(.caption).foregroundStyle(.secondary) }
-                                Text("来源：\(book.sourceIDs.count) 个").font(.caption2).foregroundStyle(.secondary)
-                            }
+                            resultRow(book)
                         }
                     }
                     Section("书源状态") {
@@ -52,6 +48,41 @@ struct SearchView: View {
         case .empty: return "无结果"
         case .failed(let message): return "失败：\(message)"
         case .timedOut: return "超时"
+        }
+    }
+
+    @ViewBuilder
+    private func resultRow(_ book: SearchBook) -> some View {
+        if let sourceID = book.sourceIDs.first(where: { book.resolvedDetailURL(forSourceID: $0) != nil }),
+           let source = model.sources.first(where: { $0.id == sourceID }),
+           let detailURL = book.resolvedDetailURL(forSourceID: sourceID) {
+            let detailBook = SearchBook(
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                detailURL: detailURL.absoluteString,
+                sourceIDs: [sourceID]
+            )
+            NavigationLink {
+                BookDetailView(book: detailBook, source: source)
+            } label: {
+                bookRow(book)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                bookRow(book)
+                Text("该书源未提供详情地址")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func bookRow(_ book: SearchBook) -> some View {
+        VStack(alignment: .leading) {
+            Text(book.title)
+            if let author = book.author { Text(author).font(.caption).foregroundStyle(.secondary) }
+            Text("来源：\(book.sourceIDs.count) 个").font(.caption2).foregroundStyle(.secondary)
         }
     }
 }
