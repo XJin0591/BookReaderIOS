@@ -52,4 +52,19 @@ final class BookSourceImportTests: XCTestCase {
         XCTAssertTrue(sources[0].enabled)
         XCTAssertEqual(sources[0].id, "https://example.invalid/source")
     }
+
+    func testDecodesAndEncodesDetailTocAndContentRules() throws {
+        let data = Data(#"{"bookSourceName":"源","bookSourceUrl":"https://example.invalid","ruleBookInfo":{"name":".title"},"ruleToc":{"chapterList":".chapter"},"ruleContent":{"content":".content"}}"#.utf8)
+        let source = try XCTUnwrap(BookSourceImport.decode(data).first)
+        XCTAssertEqual(source.ruleBookInfo["name"], ".title")
+        XCTAssertEqual(source.ruleToc["chapterList"], ".chapter")
+        XCTAssertEqual(source.ruleContent["content"], ".content")
+
+        let encoded = try JSONEncoder().encode(source)
+        let decoded = try XCTUnwrap(BookSourceImport.decode(encoded).first)
+        XCTAssertEqual(decoded, source)
+
+        let old = Data(#"{"bookSourceName":"旧源","bookSourceUrl":"https://old.invalid"}"#.utf8)
+        XCTAssertEqual(try BookSourceImport.decode(old).first?.ruleContent, [:])
+    }
 }
