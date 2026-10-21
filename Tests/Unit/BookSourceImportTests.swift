@@ -65,6 +65,6 @@ final class BookSourceImportTests: XCTestCase {
         XCTAssertEqual(decoded, source)
 
         let old = Data(#"{"bookSourceName":"旧源","bookSourceUrl":"https://old.invalid"}"#.utf8)
-        XCTAssertEqual(try BookSourceImport.decode(old).first?.ruleContent, [:])
+        XCTAssertEqual(try XCTUnwrap(BookSourceImport.decode(old).first).ruleContent, [:])
     }
 }

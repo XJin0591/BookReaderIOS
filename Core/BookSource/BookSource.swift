@@ -38,6 +38,9 @@ public struct BookSource: Codable, Identifiable, Equatable, Sendable {
     public var enabled: Bool
     public let searchURL: String?
     public let ruleSearch: [String: String]
+    public let ruleBookInfo: [String: String]
+    public let ruleToc: [String: String]
+    public let ruleContent: [String: String]
     public let requestHeaders: [String: String]
     public let cookie: String?
     public let additionalFields: [String: JSONValue]
@@ -50,6 +53,9 @@ public struct BookSource: Codable, Identifiable, Equatable, Sendable {
         enabled: Bool = true,
         searchURL: String? = nil,
         ruleSearch: [String: String] = [:],
+        ruleBookInfo: [String: String] = [:],
+        ruleToc: [String: String] = [:],
+        ruleContent: [String: String] = [:],
         requestHeaders: [String: String] = [:],
         cookie: String? = nil,
         additionalFields: [String: JSONValue] = [:]
@@ -59,13 +65,16 @@ public struct BookSource: Codable, Identifiable, Equatable, Sendable {
         self.enabled = enabled
         self.searchURL = searchURL
         self.ruleSearch = ruleSearch
+        self.ruleBookInfo = ruleBookInfo
+        self.ruleToc = ruleToc
+        self.ruleContent = ruleContent
         self.requestHeaders = requestHeaders
         self.cookie = cookie
         self.additionalFields = additionalFields
     }
 
     enum CodingKeys: String, CodingKey {
-        case bookSourceName, bookSourceUrl, enabled, searchUrl, ruleSearch, header, cookie
+        case bookSourceName, bookSourceUrl, enabled, searchUrl, ruleSearch, ruleBookInfo, ruleToc, ruleContent, header, cookie
     }
 
     public init(from decoder: Decoder) throws {
@@ -81,15 +90,18 @@ public struct BookSource: Codable, Identifiable, Equatable, Sendable {
         let enabled = try container.decodeIfPresent(Bool.self, forKey: DynamicCodingKey("enabled")) ?? true
         let searchURL = try container.decodeIfPresent(String.self, forKey: DynamicCodingKey("searchUrl"))
         let ruleSearch = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKey("ruleSearch")) ?? [:]
+        let ruleBookInfo = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKey("ruleBookInfo")) ?? [:]
+        let ruleToc = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKey("ruleToc")) ?? [:]
+        let ruleContent = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKey("ruleContent")) ?? [:]
         let headers = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKey("header")) ?? [:]
         let cookie = try container.decodeIfPresent(String.self, forKey: DynamicCodingKey("cookie"))
-        let known = Set(["bookSourceName", "bookSourceUrl", "enabled", "searchUrl", "ruleSearch", "header", "cookie"])
+        let known = Set(["bookSourceName", "bookSourceUrl", "enabled", "searchUrl", "ruleSearch", "ruleBookInfo", "ruleToc", "ruleContent", "header", "cookie"])
         var additional: [String: JSONValue] = [:]
         for key in container.allKeys where !known.contains(key.stringValue) {
             additional[key.stringValue] = try container.decode(JSONValue.self, forKey: key)
         }
 
-        self.init(bookSourceName: name, bookSourceURL: url, enabled: enabled, searchURL: searchURL, ruleSearch: ruleSearch, requestHeaders: headers, cookie: cookie, additionalFields: additional)
+        self.init(bookSourceName: name, bookSourceURL: url, enabled: enabled, searchURL: searchURL, ruleSearch: ruleSearch, ruleBookInfo: ruleBookInfo, ruleToc: ruleToc, ruleContent: ruleContent, requestHeaders: headers, cookie: cookie, additionalFields: additional)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -99,6 +111,9 @@ public struct BookSource: Codable, Identifiable, Equatable, Sendable {
         try container.encode(enabled, forKey: DynamicCodingKey("enabled"))
         try container.encodeIfPresent(searchURL, forKey: DynamicCodingKey("searchUrl"))
         try container.encode(ruleSearch, forKey: DynamicCodingKey("ruleSearch"))
+        try container.encode(ruleBookInfo, forKey: DynamicCodingKey("ruleBookInfo"))
+        try container.encode(ruleToc, forKey: DynamicCodingKey("ruleToc"))
+        try container.encode(ruleContent, forKey: DynamicCodingKey("ruleContent"))
         try container.encode(requestHeaders, forKey: DynamicCodingKey("header"))
         try container.encodeIfPresent(cookie, forKey: DynamicCodingKey("cookie"))
         for (key, value) in additionalFields { try container.encode(value, forKey: DynamicCodingKey(key)) }
