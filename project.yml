@@ -14,6 +14,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xjin0591.bookreaderios
+        GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
   BookReaderIOSTests:
@@ -23,6 +24,10 @@ targets:
       - path: Tests/Unit
     dependencies:
       - target: BookReaderIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xjin0591.bookreaderios.tests
+        GENERATE_INFOPLIST_FILE: YES
   BookReaderIOSUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -30,6 +35,10 @@ targets:
       - path: Tests/UI
     dependencies:
       - target: BookReaderIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xjin0591.bookreaderios.uitests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   BookReaderIOS:
     build:
