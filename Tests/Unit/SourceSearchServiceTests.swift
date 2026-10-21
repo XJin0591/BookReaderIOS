@@ -33,6 +33,25 @@ final class SourceSearchServiceTests: XCTestCase {
         XCTAssertNil(books[2].detailURL)
         XCTAssertEqual(books.map(\.sourceIDs), [[source.id], [source.id], [source.id]])
     }
+
+    func testDetailDestinationUsesOnlyValidHTTPURLForSelectedSource() {
+        let book = SearchBook(
+            id: "book",
+            title: "书",
+            author: nil,
+            detailURL: "https://first.example.invalid/book",
+            sourceIDs: ["first", "second"],
+            detailURLsBySource: [
+                "first": "https://first.example.invalid/book",
+                "second": "javascript:alert(1)"
+            ]
+        )
+        XCTAssertEqual(book.detailURL(forSourceID: "first")?.absoluteString, "https://first.example.invalid/book")
+        XCTAssertNil(book.detailURL(forSourceID: "second"))
+
+        let missing = SearchBook(id: "missing", title: "缺链接", author: nil, detailURL: nil, sourceIDs: ["third"])
+        XCTAssertNil(missing.detailURL(forSourceID: "third"))
+    }
 }
 
 private final class SearchFixtureURLProtocol: URLProtocol {
