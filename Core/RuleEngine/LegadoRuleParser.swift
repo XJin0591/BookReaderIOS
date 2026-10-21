@@ -16,10 +16,21 @@ public enum LegadoRuleParser {
         }
         if trimmed.hasPrefix("xpath:") { return html(String(trimmed.dropFirst(6)), input: input, mode: .xpath) }
         if trimmed.hasPrefix("css:") { return html(String(trimmed.dropFirst(4)), input: input, mode: .css) }
-        throw LegadoRuleParserError.unsupportedRule(trimmed)
+        return html(normalizeLegacySelector(trimmed), input: input, mode: .css)
     }
 
     private enum HTMLMode { case css, xpath }
+
+    public static func elements(matching rule: String, from input: RuleValue) -> [String] {
+        let trimmed = rule.trimmingCharacters(in: .whitespacesAndNewlines)
+        let selector: String
+        if trimmed.hasPrefix("xpath:") {
+            selector = String(trimmed.dropFirst(6))
+        } else {
+            selector = trimmed.hasPrefix("css:") ? String(trimmed.dropFirst(4)) : normalizeLegacySelector(trimmed)
+        }
+        return htmlMatches(selector, in: input.stringValue).map(\.full)
+    }
 
     private static func html(_ selector: String, input: RuleValue, mode: HTMLMode) -> [RuleValue] {
         let html = input.stringValue
@@ -36,7 +47,16 @@ public enum LegadoRuleParser {
             else { normalized = selector; extraction = .text }
         }
 
-        let simple = normalized.replacingOccurrences(of: "^//", with: "", options: .regularExpression)
+        return htmlMatches(normalized, in: html).compactMap { element in
+            switch extraction {
+            case .text: return .string(Self.stripTags(element.body))
+            case .attribute(let name): return Self.attribute(name, from: element.full).map(RuleValue.string)
+            }
+        }
+    }
+
+    private static func htmlMatches(_ selector: String, in html: String) -> [(full: String, body: String)] {
+        let simple = selector.replacingOccurrences(of: "^//", with: "", options: .regularExpression)
         let selectorBase = String(simple.split(separator: "[").first ?? "")
         let tag: String? = {
             guard !selectorBase.hasPrefix(".") && !selectorBase.hasPrefix("#") else { return nil }
@@ -79,13 +99,23 @@ public enum LegadoRuleParser {
             guard let tagRange = Range(match.range(at: 1), in: html), let bodyRange = Range(match.range(at: 2), in: html) else { return nil }
             let actualTag = String(html[tagRange])
             guard (tag == nil || tag == actualTag), let fullRange = Range(match.range, in: html) else { return nil }
-            let full = String(html[fullRange])
-            let body = String(html[bodyRange])
-            switch extraction {
-            case .text: return .string(Self.stripTags(body))
-            case .attribute(let name): return Self.attribute(name, from: full).map(RuleValue.string)
-            }
+            return (String(html[fullRange]), String(html[bodyRange]))
         }
+    }
+
+    private static func normalizeLegacySelector(_ rule: String) -> String {
+        var selector = rule
+        if selector.hasPrefix("class.") {
+            selector = "." + selector.dropFirst(6)
+        } else if selector.hasPrefix("tag.") {
+            selector = String(selector.dropFirst(4))
+        } else if selector.hasPrefix("id.") {
+            selector = "#" + selector.dropFirst(3)
+        }
+        if selector.hasSuffix("@text") {
+            selector = String(selector.dropLast(5)) + "::text"
+        }
+        return selector
     }
 
     private enum Extraction { case text, attribute(String) }
@@ -96,9 +126,11 @@ public enum LegadoRuleParser {
         return String(html[range])
     }
 
-    private static func stripTags(_ value: String) -> String {
+    public static func stripHTML(_ value: String) -> String {
         value.replacingOccurrences(of: #"<[^>]+>"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    private static func stripTags(_ value: String) -> String { stripHTML(value) }
 
     private static func regex(_ pattern: String, from value: String) throws -> [RuleValue] {
         guard let expression = try? NSRegularExpression(pattern: pattern) else { throw LegadoRuleParserError.invalidRegex(pattern) }

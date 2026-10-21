@@ -4,17 +4,19 @@ public struct SearchBook: Identifiable, Equatable, Sendable {
     public let id: String
     public let title: String
     public let author: String?
-    public let detailURL: String
+    public let detailURL: String?
     public var sourceIDs: [String]
     public var detailURLsBySource: [String: String]
 
-    public init(id: String, title: String, author: String?, detailURL: String, sourceIDs: [String], detailURLsBySource: [String: String] = [:]) {
+    public init(id: String, title: String, author: String?, detailURL: String?, sourceIDs: [String], detailURLsBySource: [String: String] = [:]) {
         self.id = id
         self.title = title
         self.author = author
         self.detailURL = detailURL
         self.sourceIDs = sourceIDs
-        self.detailURLsBySource = detailURLsBySource.isEmpty ? Dictionary(uniqueKeysWithValues: sourceIDs.map { ($0, detailURL) }) : detailURLsBySource
+        self.detailURLsBySource = detailURLsBySource.isEmpty
+            ? Dictionary(uniqueKeysWithValues: sourceIDs.compactMap { sourceID in detailURL.map { (sourceID, $0) } })
+            : detailURLsBySource
     }
 }
 
