@@ -42,7 +42,7 @@ public final class SearchCoordinator: ObservableObject {
                 let source = sources[nextIndex]
                 group.addTask {
                     do { return SourceSearchResult(source: source, result: .success(try await service.search(source: source, keyword: keyword))) }
-                    catch { return SourceSearchResult(source: source, result: .failure(SearchCoordinator.failure(from: error))) }
+                    catch { return SourceSearchResult(source: source, result: .failure(sourceSearchFailure(from: error))) }
                 }
                 nextIndex += 1
             }
@@ -56,7 +56,7 @@ public final class SearchCoordinator: ObservableObject {
                     let source = sources[nextIndex]
                     group.addTask {
                         do { return SourceSearchResult(source: source, result: .success(try await service.search(source: source, keyword: keyword))) }
-                        catch { return SourceSearchResult(source: source, result: .failure(SearchCoordinator.failure(from: error))) }
+                        catch { return SourceSearchResult(source: source, result: .failure(sourceSearchFailure(from: error))) }
                     }
                     nextIndex += 1
                 }
@@ -99,15 +99,16 @@ public final class SearchCoordinator: ObservableObject {
         value.lowercased().filter { !$0.isWhitespace && !$0.isPunctuation }
     }
 
-    private static func failure(from error: Error) -> SourceSearchFailure {
-        if let error = error as? SourceSearchError {
-            switch error {
-            case .timedOut: return .timedOut
-            case .failed(let message): return .failed(message)
-            }
+}
+
+private func sourceSearchFailure(from error: Error) -> SourceSearchFailure {
+    if let error = error as? SourceSearchError {
+        switch error {
+        case .timedOut: return .timedOut
+        case .failed(let message): return .failed(message)
         }
-        return .failed(error.localizedDescription)
     }
+    return .failed(error.localizedDescription)
 }
 
 private enum SourceSearchFailure: Error, Sendable {
