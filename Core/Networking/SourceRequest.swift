@@ -18,8 +18,8 @@ public struct SourceRequest: Sendable {
         guard let url = URL(string: urlString), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme), url.host != nil else {
             throw SourceRequestError.invalidURL(urlString)
         }
-        let body = bodyTemplate.map { Self.interpolate($0, values: values).data(using: .utf8) }
-        self.init(url: url, method: method, headers: headers, body: body ?? nil)
+        let body = bodyTemplate.flatMap { Self.interpolate($0, values: values).data(using: .utf8) }
+        self.init(url: url, method: method, headers: headers, body: body)
     }
 
     private static func interpolateURL(_ template: String, values: [String: String]) throws -> String {

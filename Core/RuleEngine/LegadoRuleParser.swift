@@ -39,15 +39,18 @@ public enum LegadoRuleParser {
         let simple = normalized.replacingOccurrences(of: "^//", with: "", options: .regularExpression)
         let selectorBase = String(simple.split(separator: "[").first ?? "")
         let tag: String? = {
+            guard !selectorBase.hasPrefix(".") && !selectorBase.hasPrefix("#") else { return nil }
             let value = selectorBase.split(separator: ".").first.map(String.init) ?? selectorBase
             return value.split(separator: "#").first.map(String.init)
         }()
         let className: String? = {
-            guard let value = selectorBase.split(separator: ".").dropFirst().first else { return nil }
+            guard let dot = selectorBase.firstIndex(of: ".") else { return nil }
+            let value = selectorBase[selectorBase.index(after: dot)...]
             return String(value).split(separator: "#").first.map(String.init)
         }()
         let id: String? = {
-            guard let value = selectorBase.split(separator: "#").dropFirst().first else { return nil }
+            guard let hash = selectorBase.firstIndex(of: "#") else { return nil }
+            let value = selectorBase[selectorBase.index(after: hash)...]
             return String(value).split(separator: ".").first.map(String.init)
         }()
         let classAttribute: String? = {
@@ -56,16 +59,27 @@ public enum LegadoRuleParser {
                   let range = Range(match.range(at: 1), in: simple) else { return nil }
             return String(simple[range])
         }()
-        let pattern = #"<([A-Za-z][A-Za-z0-9:_-]*)(?:\s+[^>]*)?>([\s\S]*?)</\1\s*>"#
+        let tagPattern = tag.map { NSRegularExpression.escapedPattern(for: $0) } ?? "[A-Za-z][A-Za-z0-9:_-]*"
+        var conditions = ""
+        if let className {
+            let escaped = NSRegularExpression.escapedPattern(for: className)
+            conditions += "(?=[^>]*\\bclass\\s*=\\s*[\\\"'][^\\\"']*\\b\(escaped)\\b[^\\\"']*[\\\"'])"
+        }
+        if let id {
+            let escaped = NSRegularExpression.escapedPattern(for: id)
+            conditions += "(?=[^>]*\\bid\\s*=\\s*[\\\"']\(escaped)[\\\"'])"
+        }
+        if let classAttribute {
+            let escaped = NSRegularExpression.escapedPattern(for: classAttribute)
+            conditions += "(?=[^>]*\\bclass\\s*=\\s*[\\\"']\(escaped)[\\\"'])"
+        }
+        let pattern = "<(\(tagPattern))\\b\(conditions)[^>]*>([\\s\\S]*?)</\\1\\s*>"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         return regex.matches(in: html, range: NSRange(html.startIndex..., in: html)).compactMap { match in
             guard let tagRange = Range(match.range(at: 1), in: html), let bodyRange = Range(match.range(at: 2), in: html) else { return nil }
             let actualTag = String(html[tagRange])
             guard (tag == nil || tag == actualTag), let fullRange = Range(match.range, in: html) else { return nil }
             let full = String(html[fullRange])
-            guard className == nil || full.contains("class=\"\(className!)\"") || full.contains("class='\(className!)'") else { return nil }
-            guard id == nil || full.contains("id=\"\(id!)\"") || full.contains("id='\(id!)'") else { return nil }
-            guard classAttribute == nil || full.contains("class=\"\(classAttribute!)\"") || full.contains("class='\(classAttribute!)'") else { return nil }
             let body = String(html[bodyRange])
             switch extraction {
             case .text: return .string(Self.stripTags(body))

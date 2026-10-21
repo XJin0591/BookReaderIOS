@@ -29,7 +29,9 @@ final class URLSessionHTTPClientTests: XCTestCase {
         FixtureURLProtocol.responseData = Data("ok".utf8)
         FixtureURLProtocol.response = HTTPURLResponse(url: URL(string: "https://example.invalid")!, statusCode: 200, httpVersion: nil, headerFields: nil)
 
-        let client = URLSessionHTTPClient(configuration: .ephemeral)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [FixtureURLProtocol.self]
+        let client = URLSessionHTTPClient(configuration: configuration)
         let request = SourceRequest(url: URL(string: "https://example.invalid")!, method: "GET", headers: [:], body: nil)
         let result = try await client.data(for: request, timeout: .seconds(2))
         XCTAssertEqual(result.0, Data("ok".utf8))
