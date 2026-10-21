@@ -5,7 +5,9 @@ struct SourceImportView: View {
     let onImport: ([BookSource]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
+    @State private var subscriptionURL = ""
     @State private var showingFileImporter = false
+    @State private var isImporting = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -15,6 +17,22 @@ struct SourceImportView: View {
                     TextEditor(text: $text)
                         .frame(minHeight: 220)
                         .accessibilityIdentifier("书源JSON输入")
+                }
+                Section("订阅 URL") {
+                    TextField("https://example.com/sources.json", text: $subscriptionURL)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        .accessibilityIdentifier("书源订阅URL输入")
+                    Button {
+                        importRemoteURL(subscriptionURL)
+                    } label: {
+                        if isImporting {
+                            ProgressView()
+                        } else {
+                            Text("从 URL 导入")
+                        }
+                    }
+                    .disabled(isImporting || subscriptionURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 Section {
                     Button("选择 JSON 文件") { showingFileImporter = true }
@@ -46,5 +64,20 @@ struct SourceImportView: View {
             onImport(sources)
             dismiss()
         } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func importRemoteURL(_ value: String) {
+        isImporting = true
+        errorMessage = nil
+        Task {
+            do {
+                let sources = try await BookSourceRemoteImporter().importSources(from: value)
+                onImport(sources)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                isImporting = false
+            }
+        }
     }
 }
