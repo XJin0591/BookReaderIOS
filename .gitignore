@@ -2,3 +2,4 @@
 DerivedData/
 BookReaderIOS.xcodeproj/
 .build/
+.superpowers/
