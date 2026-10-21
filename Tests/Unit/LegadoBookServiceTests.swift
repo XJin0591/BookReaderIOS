@@ -116,8 +116,6 @@ final class LegadoBookServiceTests: XCTestCase {
         BookSource(
             bookSourceName: "阅读源",
             bookSourceURL: "https://example.invalid",
-            requestHeaders: ["X-Source": "fixture"],
-            cookie: "sid=reading",
             ruleBookInfo: [
                 "name": "css:.title::text",
                 "author": "css:.author::text",
@@ -130,7 +128,9 @@ final class LegadoBookServiceTests: XCTestCase {
                 "chapterName": "css:a::text",
                 "chapterUrl": "css:a@href"
             ],
-            ruleContent: ["content": "css:.content::text"]
+            ruleContent: ["content": "css:.content::text"],
+            requestHeaders: ["X-Source": "fixture"],
+            cookie: "sid=reading"
         )
     }
 

@@ -23,13 +23,26 @@ public enum LegadoRuleParser {
 
     public static func elements(matching rule: String, from input: RuleValue) -> [String] {
         let trimmed = rule.trimmingCharacters(in: .whitespacesAndNewlines)
-        let selector: String
+        var selector: String
         if trimmed.hasPrefix("xpath:") {
             selector = String(trimmed.dropFirst(6))
         } else {
             selector = trimmed.hasPrefix("css:") ? String(trimmed.dropFirst(4)) : normalizeLegacySelector(trimmed)
         }
+        if selector.hasSuffix("::text") { selector = String(selector.dropLast(6)) }
+        else if selector.hasSuffix("/text()") { selector = String(selector.dropLast(7)) }
+        else if let at = selector.lastIndex(of: "@") { selector = String(selector[..<at]) }
         return htmlMatches(selector, in: input.stringValue).map(\.full)
+    }
+
+    public static func plainText(fromHTML html: String) -> String {
+        var text = html.replacingOccurrences(of: #"<\s*br\s*/?\s*>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+        text = text.replacingOccurrences(of: #"</\s*(p|div|li|section|h[1-6]|blockquote|tr)\s*>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+        return stripHTML(text)
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
     }
 
     private static func html(_ selector: String, input: RuleValue, mode: HTMLMode) -> [RuleValue] {
