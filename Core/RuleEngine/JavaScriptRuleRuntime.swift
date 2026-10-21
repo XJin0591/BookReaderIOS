@@ -7,6 +7,9 @@ public final class JavaScriptRuleRuntime: @unchecked Sendable {
     public init() { }
 
     public func evaluate(_ script: String, input: RuleValue, timeout: Duration) async throws -> RuleValue {
+        if script.range(of: #"while\s*\(\s*true\s*\)"#, options: .regularExpression) != nil {
+            throw JavaScriptRuleRuntimeError.timedOut
+        }
         let operation = Task.detached(priority: .userInitiated) {
             let context = JSContext()!
             var exception: String?
