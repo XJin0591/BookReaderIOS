@@ -37,9 +37,19 @@ public enum LegadoRuleParser {
         }
 
         let simple = normalized.replacingOccurrences(of: "^//", with: "", options: .regularExpression)
-        let tag = simple.split(separator: "[").first.map(String.init)?.split(separator: ".").first.map(String.init)?.split(separator: "#").first.map(String.init)
-        let className = simple.split(separator: ".").dropFirst().first.map(String.init)?.split(separator: "[").first.map(String.init)
-        let id = simple.split(separator: "#").dropFirst().first.map(String.init)?.split(separator: "[").first.map(String.init)
+        let selectorBase = String(simple.split(separator: "[").first ?? "")
+        let tag: String? = {
+            let value = selectorBase.split(separator: ".").first.map(String.init) ?? selectorBase
+            return value.split(separator: "#").first.map(String.init)
+        }()
+        let className: String? = {
+            guard let value = selectorBase.split(separator: ".").dropFirst().first else { return nil }
+            return String(value).split(separator: "#").first.map(String.init)
+        }()
+        let id: String? = {
+            guard let value = selectorBase.split(separator: "#").dropFirst().first else { return nil }
+            return String(value).split(separator: ".").first.map(String.init)
+        }()
         let classAttribute: String? = {
             guard let expression = try? NSRegularExpression(pattern: #"\[\s*class\s*=\s*['\"]([^'\"]+)['\"]\s*\]"#),
                   let match = expression.firstMatch(in: simple, range: NSRange(simple.startIndex..., in: simple)),

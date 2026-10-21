@@ -11,7 +11,6 @@ public final class JavaScriptRuleRuntime: @unchecked Sendable {
             let context = JSContext()!
             var exception: String?
             context.exceptionHandler = { _, error in exception = error?.toString() }
-            context.setExecutionTimeLimit(timeout.timeInterval) { }
             context.setObject(input.objectValue, forKeyedSubscript: "input" as NSString)
             let result = context.evaluateScript(script)
             if let exception { throw JavaScriptRuleRuntimeError.evaluationFailed(exception) }
