@@ -40,10 +40,12 @@ public enum LegadoRuleParser {
         let tag = simple.split(separator: "[").first.map(String.init)?.split(separator: ".").first.map(String.init)?.split(separator: "#").first.map(String.init)
         let className = simple.split(separator: ".").dropFirst().first.map(String.init)?.split(separator: "[").first.map(String.init)
         let id = simple.split(separator: "#").dropFirst().first.map(String.init)?.split(separator: "[").first.map(String.init)
-        let classAttribute = simple.firstIndex(of: "'").flatMap { start in simple[start...].dropFirst().firstIndex(of: "'") }.map { _ in
-            let pieces = simple.split(separator: "'")
-            return pieces.count > 1 ? String(pieces[1]) : nil
-        } ?? nil
+        let classAttribute: String? = {
+            guard let expression = try? NSRegularExpression(pattern: #"\[\s*class\s*=\s*['\"]([^'\"]+)['\"]\s*\]"#),
+                  let match = expression.firstMatch(in: simple, range: NSRange(simple.startIndex..., in: simple)),
+                  let range = Range(match.range(at: 1), in: simple) else { return nil }
+            return String(simple[range])
+        }()
         let pattern = #"<([A-Za-z][A-Za-z0-9:_-]*)(?:\s+[^>]*)?>([\s\S]*?)</\1\s*>"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         return regex.matches(in: html, range: NSRange(html.startIndex..., in: html)).compactMap { match in
