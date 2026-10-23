@@ -17,3 +17,16 @@ jobs:
         run: xcodegen generate
       - name: Run iOS tests
         run: xcodebuild -project BookReaderIOS.xcodeproj -scheme BookReaderIOS -destination 'platform=iOS Simulator,name=iPhone 16' test
+      - name: Build unsigned iOS app
+        run: xcodebuild -project BookReaderIOS.xcodeproj -scheme BookReaderIOS -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Debug-iphoneos/BookReaderIOS.app Payload/
+          /usr/bin/zip -r BookReaderIOS-unsigned.ipa Payload
+      - name: Upload personal test IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: BookReaderIOS-personal-test-unsigned-ipa
+          path: BookReaderIOS-unsigned.ipa
+          retention-days: 14
